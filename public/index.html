@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arena 42</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+<header>
+  <h1>Arena 42</h1>
+  <span id="estado-red">sin conectar</span>
+  <span id="contadores"></span>
+</header>
+
+<main id="vestibulo">
+  <form id="entrar">
+    <h2>Entrar en la arena</h2>
+    <label>Tu login <input id="login" maxlength="20" autocomplete="off" required></label>
+    <label>Color <input id="color" type="color" value="#3fa7d6"></label>
+    <div class="botones">
+      <button type="submit" value="jugar">Jugar</button>
+      <button type="submit" value="espectador" class="secundario" formnovalidate>Proyector (espectador)</button>
+    </div>
+    <p class="ayuda">Moverse: ← → o A D · Saltar: espacio, ↑ o W · Habilidad: J · Disparar: K</p>
+  </form>
+</main>
+
+<main id="partida" hidden>
+  <div class="escenario"><canvas id="lienzo" width="960" height="544"></canvas></div>
+  <aside>
+    <section class="equipo">
+      <label>Habilidad (J) <select id="habilidad"></select></label>
+      <label>Proyectil (K) <select id="proyectil"></select></label>
+    </section>
+    <section>
+      <h3>Jugadores</h3>
+      <ol id="jugadores"></ol>
+    </section>
+    <section>
+      <h3>En directo</h3>
+      <ul id="feed"></ul>
+    </section>
+    <section id="rotas" hidden>
+      <h3>Piezas rotas</h3>
+      <p id="rotas-lista"></p>
+    </section>
+    <section class="merge">
+      <h3>Último merge en dev</h3>
+      <p id="merge-mensaje">—</p>
+      <p id="merge-detalle"></p>
+      <p class="mapa">mapa <span id="mapa-nombre"></span></p>
+    </section>
+  </aside>
+</main>
+<script type="module" src="motor/juego.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+:root {
+  --fondo: #120f1d;
+  --barra: #0a0812;
+  --tarjeta: #1e1a2e;
+  --borde: #3b3355;
+  --texto: #efeaff;
+  --suave: #c3bbe0;
+  --acento: #ffd666;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { color-scheme: dark; }
+body { margin: 0; min-height: 100vh; background: var(--fondo); color: var(--texto); font-family: "Space Grotesk", system-ui, sans-serif; display: flex; flex-direction: column; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; padding: 14px 24px; background: var(--barra); }
+header h1 { margin: 0; font-size: 24px; }
+header span { font-family: var(--mono); font-size: 14px; color: var(--suave); }
+#contadores { margin-left: auto; }
+
+#vestibulo { flex: 1; display: grid; place-items: center; padding: 24px 16px; }
+form { width: min(420px, 100%); display: flex; flex-direction: column; gap: 16px; padding: 28px; border-radius: 16px; background: var(--tarjeta); border: 1px solid var(--borde); }
+form h2 { margin: 0; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--suave); }
+input, select { font: inherit; color: var(--texto); background: var(--fondo); border: 1px solid var(--borde); border-radius: 8px; padding: 10px 12px; min-height: 44px; }
+input[type="color"] { padding: 4px; width: 80px; }
+.botones { display: flex; flex-wrap: wrap; gap: 10px; }
+button { font: inherit; font-weight: 700; min-height: 44px; padding: 0 18px; border-radius: 10px; border: 0; background: var(--acento); color: #1d1600; cursor: pointer; }
+button.secundario { background: var(--borde); color: var(--texto); }
+.ayuda { margin: 0; font-family: var(--mono); font-size: 12px; color: var(--suave); line-height: 1.5; }
+
+#partida { flex: 1; display: flex; flex-wrap: wrap; gap: 20px; padding: 20px 24px; }
+.escenario { flex: 999 1 640px; min-width: 0; }
+canvas { width: 100%; height: auto; display: block; border: 3px solid #2a2440; border-radius: 6px; background: #1a1628; }
+aside { flex: 1 1 280px; display: flex; flex-direction: column; gap: 18px; }
+aside section { display: flex; flex-direction: column; gap: 8px; }
+aside h3 { margin: 0; font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--acento); }
+.equipo { flex-direction: row; flex-wrap: wrap; gap: 12px; }
+.equipo label { flex: 1 1 130px; }
+ol, ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+#jugadores li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--tarjeta); }
+#jugadores i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+#jugadores b { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#jugadores span { flex: 1; font-family: var(--mono); font-size: 12px; color: var(--suave); text-align: right; }
+#jugadores strong { font-family: var(--mono); min-width: 2ch; text-align: right; }
+#jugadores .vacio { color: var(--suave); }
+#feed li { font-family: var(--mono); font-size: 13px; color: #d8d2ee; }
+#rotas p { margin: 0; font-family: var(--mono); font-size: 13px; color: #ff8a7a; }
+.merge { padding: 12px 14px; border-radius: 12px; background: var(--barra); border: 1px solid rgba(255, 214, 102, .6); }
+.merge p { margin: 0; }
+#merge-mensaje { font-weight: 700; }
+#merge-detalle, .mapa { font-family: var(--mono); font-size: 13px; color: var(--suave); }
+body.espectador .equipo { display: none; }
+body.espectador #feed li { font-size: 15px; }

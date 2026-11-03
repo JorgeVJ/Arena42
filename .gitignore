@@ -1,0 +1,9 @@
+node_modules/
+.wrangler/
+.dev.vars
+# Generados por scripts/registro.mjs
+public/registro.js
+public/version.json
+# Estado local del vigilante de PR
+.vigilante/
+informe.md

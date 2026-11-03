@@ -1,0 +1,27 @@
+# Valida cada PR contra dev y deja el informe como comentario.
+# El job se llama «validar»: es el check obligatorio de la protección de rama.
+name: PR
+on:
+  pull_request:
+    branches: [dev]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validar
+        run: node scripts/validar.mjs --base origin/${{ github.base_ref }} --autor "${{ github.event.pull_request.user.login }}" --informe informe.md
+      - name: Comentar el informe
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: gh pr comment "$PR" --body-file informe.md --edit-last || gh pr comment "$PR" --body-file informe.md

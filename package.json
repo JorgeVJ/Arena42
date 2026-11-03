@@ -1,0 +1,15 @@
+{
+  "name": "arena42",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "registro": "node scripts/registro.mjs",
+    "dev": "node scripts/dev.mjs",
+    "validar": "node scripts/validar.mjs --base dev",
+    "deploy": "node scripts/registro.mjs && wrangler deploy",
+    "vigilar": "node scripts/vigilar-prs.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.157.0"
+  }
+}
