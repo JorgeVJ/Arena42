@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Crea el repo en GitHub y deja puestas las reglas del taller. Se ejecuta una vez, a mano:
-#   bash scripts/configurar-github.sh JorgeVJ/arena42
+#   bash scripts/configurar-github.sh JorgeVJ/Arena42
 # Requiere gh con sesión iniciada. La protección de ramas en GitHub Free solo existe en repos públicos.
 set -euo pipefail
 REPO="${1:?uso: configurar-github.sh <dueño>/<repo>}"
@@ -20,11 +20,11 @@ gh api -X PATCH "repos/$REPO" \
   -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY >/dev/null
 
 # dev: nada entra sin PR, sin la validación en verde y sin la aprobación del code owner (@JorgeVJ).
-# enforce_admins: tampoco Jorge se la salta por error.
+# Jorge no puede aprobar sus propias PR (cambios del motor): las fusiona con `gh pr merge <n> --squash --admin`.
 gh api -X PUT "repos/$REPO/branches/dev/protection" --input - >/dev/null <<'JSON'
 {
   "required_status_checks": { "strict": false, "contexts": ["validar"] },
-  "enforce_admins": true,
+  "enforce_admins": false,
   "required_pull_request_reviews": {
     "require_code_owner_reviews": true,
     "required_approving_review_count": 1,
@@ -60,4 +60,5 @@ echo
 echo "Listo. Falta, a mano:"
 echo "  gh secret set CLOUDFLARE_API_TOKEN --repo $REPO"
 echo "  gh secret set CLOUDFLARE_ACCOUNT_ID --repo $REPO"
-echo "  node scripts/crear-issues.mjs $REPO   # backlog inicial"
+echo "  node scripts/exportar-42teams.mjs     # backlog a la plantilla de 42Teams"
+echo "  Settings → Actions → General: exigir aprobación para workflows de colaboradores externos"

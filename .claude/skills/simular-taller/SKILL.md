@@ -1,21 +1,21 @@
 ---
 name: simular-taller
-description: Ensayo del taller sin público — "/simular-taller", "simula el taller", "lanza estudiantes de prueba". Despliega agentes que hacen de estudiantes (cada uno coge un issue del backlog, programa su pieza en su rama y la valida) y un agente revisor que aprueba o pide cambios con los criterios de revisar-pr. Lo aprobado se fusiona en dev local y aparece en la partida de npm run dev. Argumentos: número de estudiantes (3 por defecto) y --con-trampa.
+description: Ensayo del taller sin público — "/simular-taller", "simula el taller", "lanza estudiantes de prueba". Despliega agentes que hacen de estudiantes (cada uno coge una tarjeta H-XXX del backlog, programa su pieza en su rama y la valida) y un agente revisor que aprueba o pide cambios con los criterios de revisar-pr. Lo aprobado se fusiona en dev local y aparece en la partida de pnpm dev. Argumentos: número de estudiantes (3 por defecto) y --con-trampa.
 ---
 
 # Simular el taller
 
-Ensayo local de todo el ciclo: issue → rama → pieza → validación → revisión → cambios → merge en `dev` → la partida recarga. Todo pasa en este ordenador, sin GitHub: en GitHub no se puede aprobar una PR propia, así que el flujo con PR reales se prueba con una segunda cuenta.
+Ensayo local de todo el ciclo: tarjeta → rama → pieza → validación → revisión → cambios → merge en `dev` → la partida recarga. Todo pasa en este ordenador, sin GitHub: en GitHub no se puede aprobar una PR propia, así que el flujo con PR reales se prueba con una segunda cuenta.
 
 ## Antes de empezar
 
 - `git status` limpio y rama actual `dev` (si no existe: `git branch dev main`). Si hay cambios sin commit, para y avisa a Jorge.
-- Pide a Jorge que tenga `npm run dev` abierto y la partida en `http://localhost:8787` (mejor un navegador como espectador y otro jugando). El servidor regenera el registro cuando cambia `dev`.
+- Pide a Jorge que tenga `pnpm dev` abierto y la partida en `http://localhost:8787` (mejor un navegador como espectador y otro jugando). El servidor regenera el registro cuando cambia `dev`.
 - Argumentos: `N` estudiantes (3 por defecto, máx. 6). Con `--con-trampa`, uno más recibe a escondidas una tarea que incumple la spec (tocar `public/motor/mundo.js` para darse ventaja, o usar `fetch`), para ver que el revisor y el validador la paran.
 
 ## 1. Repartir tareas
 
-Lee `backlog/issues.md` y elige N issues cuya pieza aún no exista en `public/piezas/` (ni el mapa en `public/mapas/`). Mezcla tipos (un estado, un power-up, un proyectil…) y evita los que dependen de otro que no esté hecho («congelado» sin «hielo», etc.). Di a Jorge en una línea qué ha tocado a quién.
+Lee `backlog/issues.md` y elige N tareas cuya pieza aún no exista en `public/piezas/` (ni el mapa en `public/mapas/`). Mezcla tipos (un estado, un power-up, un proyectil…) y evita las que dependen de otra que no esté hecha (`bloqueada:`, o «congelado» sin «hielo»). Di a Jorge en una línea qué ha tocado a quién.
 
 Para cada tarea: `slug` = nombre de la pieza, rama `feature/<slug>`, y un worktree propio para que los agentes no se pisen:
 
@@ -28,7 +28,7 @@ git worktree add ../Arena42-sim/<slug> -b feature/<slug> dev
 Un agente por tarea (`general-purpose`, modelo `sonnet`), todos en el mismo mensaje. Brief de cada uno, con sus datos:
 
 > Eres un estudiante de 42 en un taller de GitHub. Tu login es `sim-<slug>`. Trabajas SOLO en `<ruta absoluta del worktree>`, en la rama `feature/<slug>`: no cambies de rama, no toques otras carpetas ni hagas merge.
-> Tarea (issue): «<título>» — <texto del issue>.
+> Tarea (tarjeta H-XXX de backlog/issues.md): «<título>» — <texto de la tarea>.
 > 1. Lee `SPEC.md` y una pieza de ejemplo del mismo tipo en `public/piezas/<tipo>/`.
 > 2. Crea `public/piezas/<tipo>/<slug>.js` (o el mapa) con `autor: '@sim-<slug>'` y un comentario arriba que diga qué hace.
 > 3. Ejecuta `node scripts/validar.mjs --base dev --autor sim-<slug>` en tu worktree hasta que salga en verde.
@@ -54,7 +54,7 @@ Desde la raíz del repo (rama `dev`):
 
 ```bash
 git merge --squash feature/<slug>
-git commit -m "<título del issue> (simulación)" --author "sim-<slug> <sim-<slug>@arena42.local>"
+git commit -m "H-XXX · <título de la tarea> (simulación)" --author "sim-<slug> <sim-<slug>@arena42.local>"
 ```
 
 Cada commit en `dev` cambia la versión: los navegadores abiertos recargan y la pieza aparece. Di a Jorge en una línea qué acaba de entrar, para que lo busque en la partida.

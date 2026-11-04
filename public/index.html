@@ -29,8 +29,15 @@
 </main>
 
 <main id="partida" hidden>
-  <div class="escenario"><canvas id="lienzo" width="960" height="544"></canvas></div>
+  <div class="escenario">
+    <p id="aviso-cola" hidden></p>
+    <canvas id="lienzo" width="960" height="544"></canvas>
+  </div>
   <aside>
+    <section class="ronda">
+      <p id="ronda">Ronda —</p>
+      <p id="cola"></p>
+    </section>
     <section class="equipo">
       <label>Habilidad (J) <select id="habilidad"></select></label>
       <label>Proyectil (K) <select id="proyectil"></select></label>

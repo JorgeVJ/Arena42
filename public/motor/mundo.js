@@ -112,7 +112,7 @@ export class Mundo {
     this.tiempo += dt;
     for (const j of this.jugadores.values()) {
       if (j.local) this.pasoJugador(j, dt, entradas.get(j.id) || ENTRADA_VACIA);
-      else if (this.tiempo - (j.tRed ?? 0) < 0.25) { j.x += j.vx * dt; j.y += j.vy * dt; }
+      else if (this.tiempo - (j.tRed ?? 0) < 0.3) { j.x += j.vx * dt; j.y += j.vy * dt; }
       j.rastro.unshift({ x: j.x, y: j.y });
       j.rastro.length = Math.min(j.rastro.length, 6);
       const tipo = j.efecto?.particulas;
@@ -207,9 +207,10 @@ export class Mundo {
     return !!this.casillasPorCaracter[c]?.solida;
   }
 
+  // La caja ocupa [x, x + w) × [y, y + h): un pie que se hunde una fracción de píxel ya toca el suelo.
   chocaRect(x, y, w, h) {
-    for (let cy = Math.floor(y / C); cy <= Math.floor((y + h - 1) / C); cy++)
-      for (let cx = Math.floor(x / C); cx <= Math.floor((x + w - 1) / C); cx++)
+    for (let cy = Math.floor(y / C); cy <= Math.ceil((y + h) / C) - 1; cy++)
+      for (let cx = Math.floor(x / C); cx <= Math.ceil((x + w) / C) - 1; cx++)
         if (this.esSolida(cx, cy)) return true;
     return false;
   }
@@ -221,7 +222,7 @@ export class Mundo {
     if (j.vx !== 0) {
       const nx = j.x + j.vx * dt;
       if (this.chocaRect(nx, j.y, j.ancho, j.alto)) {
-        j.x = j.vx > 0 ? Math.floor((nx + j.ancho - 1) / C) * C - j.ancho : (Math.floor(nx / C) + 1) * C;
+        j.x = j.vx > 0 ? (Math.ceil((nx + j.ancho) / C) - 1) * C - j.ancho : (Math.floor(nx / C) + 1) * C;
         j.vx = 0;
         j.chocoPared = true;
       } else j.x = nx;
@@ -232,7 +233,7 @@ export class Mundo {
     const ny = j.y + j.vy * dt;
     if (this.chocaRect(j.x, ny, j.ancho, j.alto)) {
       if (j.vy > 0) {
-        j.y = Math.floor((ny + j.alto - 1) / C) * C - j.alto;
+        j.y = (Math.ceil((ny + j.alto) / C) - 1) * C - j.alto;
         j.enSuelo = true;
       } else j.y = (Math.floor(ny / C) + 1) * C;
       j.vy = 0;

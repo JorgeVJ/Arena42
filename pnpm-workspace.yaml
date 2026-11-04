@@ -1,0 +1,4 @@
+# Wrangler funciona sin ejecutar los scripts de instalación de sus dependencias.
+allowBuilds:
+  esbuild: false
+  workerd: false

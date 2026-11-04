@@ -6,10 +6,11 @@
     "registro": "node scripts/registro.mjs",
     "dev": "node scripts/dev.mjs",
     "validar": "node scripts/validar.mjs --base dev",
-    "deploy": "node scripts/registro.mjs && wrangler deploy",
+    "desplegar": "node scripts/registro.mjs && wrangler deploy",
     "vigilar": "node scripts/vigilar-prs.mjs"
   },
   "devDependencies": {
-    "wrangler": "^4.157.0"
-  }
+    "wrangler": "^4.140.0"
+  },
+  "packageManager": "pnpm@11.22.0"
 }

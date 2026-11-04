@@ -4,5 +4,7 @@
   "compatibility_date": "2026-09-01",
   "assets": { "directory": "./public", "binding": "ASSETS" },
   "durable_objects": { "bindings": [{ "name": "SALA", "class_name": "Sala" }] },
+  // Rondas de la sala y salas permitidas. En local se cambian en .dev.vars (SALAS= vacío acepta cualquiera).
+  "vars": { "MAX_JUGADORES": "10", "RONDA_S": "180", "SALAS": "taller,ensayo" },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Sala"] }]
 }

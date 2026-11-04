@@ -23,4 +23,4 @@ const head = join(RAIZ, '.git', 'logs', 'HEAD');
 if (existsSync(head)) watch(head, regenerar);
 
 const puerto = process.env.PUERTO || '8787';
-spawn('npx', ['wrangler', 'dev', '--ip', '0.0.0.0', '--port', puerto], { cwd: RAIZ, stdio: 'inherit', shell: true });
+spawn('pnpm', ['exec', 'wrangler', 'dev', '--ip', '0.0.0.0', '--port', puerto], { cwd: RAIZ, stdio: 'inherit', shell: true });

@@ -7,7 +7,8 @@ import { leerEntrada } from './entrada.js';
 const $ = (s) => document.querySelector(s);
 const params = new URLSearchParams(location.search);
 const SALA = params.get('sala') || 'taller';
-const ENVIO_MS = 50;
+const ENVIO_MS = 100;   // como mucho 10 envíos por segundo, y solo si algo cambió
+const LATIDO_MS = 2000; // aunque no cambie nada, para que quien entra tarde vea a los quietos
 const POWERUP_CADA = 8;
 
 const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
@@ -16,7 +17,8 @@ const guardarSesion = (v) => { try { sessionStorage.setItem('arena-sesion', JSON
 const leerSesion = () => { try { return JSON.parse(sessionStorage.getItem('arena-sesion')); } catch { return null; } };
 
 let mundo = null, yo = null, ws = null, miId = null, anfitrion = null, version = null;
-let puntos = {}, feed = [], cola = [];
+let puntos = {}, feed = [], pendientes = [];
+let ronda = null, espera = [];
 let sesion = null;
 
 // ---------- entrada a la sala ----------
@@ -41,11 +43,18 @@ function empezar(datos) {
   $('#vestibulo').hidden = true;
   $('#partida').hidden = false;
   document.body.classList.toggle('espectador', datos.espectador);
+  document.body.classList.toggle('esperando', !datos.espectador);
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   ws = new WebSocket(`${proto}://${location.host}/ws?sala=${encodeURIComponent(SALA)}`);
   ws.onopen = () => enviar({ t: 'hola', login: datos.login, color: datos.color, espectador: datos.espectador, mapa: params.get('mapa') || registro.mapas[0] });
   ws.onmessage = (e) => recibir(JSON.parse(e.data));
-  ws.onclose = () => { $('#estado-red').textContent = 'desconectado · recarga la página'; };
+  let abierto = false;
+  ws.addEventListener('open', () => { abierto = true; });
+  ws.onclose = (e) => {
+    $('#estado-red').textContent = !abierto ? `la sala «${SALA}» no existe`
+      : e.code === 1008 ? 'expulsado por enviar demasiados mensajes · recarga la página'
+      : 'desconectado · recarga la página';
+  };
   vigilarVersion();
 }
 
@@ -57,7 +66,7 @@ function enviar(m) {
 
 async function recibir(m) {
   if (m.t === 'bienvenida') return iniciarMundo(m);
-  if (!mundo) { cola.push(m); return; }
+  if (!mundo) { pendientes.push(m); return; }
   switch (m.t) {
     case 'estado': {
       let j = mundo.jugadores.get(m.id);
@@ -77,6 +86,7 @@ async function recibir(m) {
     case 'puntos': puntos = m.puntos; break;
     case 'feed': feed = m.feed; break;
     case 'anfitrion': anfitrion = m.id; break;
+    case 'ronda': aplicarRonda(m); break;
   }
 }
 
@@ -99,23 +109,44 @@ async function iniciarMundo(m) {
     recoger: (id) => enviar({ t: 'recoger', id }),
     anuncio: (texto) => enviar({ t: 'anuncio', texto }),
   };
-  if (!sesion.espectador) {
-    yo = mundo.crearJugador({ id: miId, login: sesion.login, color: sesion.color, local: true });
-    montarSelectores();
-  }
   mundo.iniciar();
+  aplicarRonda(m.ronda);
   const lienzo = $('#lienzo');
   lienzo.width = mundo.mapa.ancho * CASILLA;
   lienzo.height = mundo.mapa.alto * CASILLA;
   $('#mapa-nombre').textContent = m.mapa;
-  for (const pendiente of cola) recibir(pendiente);
-  cola = [];
+  for (const m of pendientes) recibir(m);
+  pendientes = [];
   requestAnimationFrame(bucle);
+}
+
+// ---------- rondas: la sala decide quién juega; el resto espera mirando ----------
+
+function aplicarRonda(r) {
+  ronda = { numero: r.numero, fin: performance.now() + r.quedan * 1000 };
+  espera = r.cola;
+  if (sesion.espectador) return;
+  const dentro = r.jugadores.includes(miId);
+  if (dentro && !yo) entrarEnJuego();
+  if (!dentro && yo) salirDelJuego();
+}
+
+function entrarEnJuego() {
+  yo = mundo.crearJugador({ id: miId, login: sesion.login, color: sesion.color, local: true });
+  montarSelectores();
+  ultimoEnviado = '';
+  document.body.classList.remove('esperando');
+}
+
+function salirDelJuego() {
+  mundo.jugadores.delete(miId);
+  yo = null;
+  document.body.classList.add('esperando');
 }
 
 // ---------- bucle ----------
 
-let anterior_t = performance.now(), ultimoEnvio = 0, ultimoPanel = 0, proximoPowerup = POWERUP_CADA;
+let anterior_t = performance.now(), ultimoEnvio = 0, ultimoEnviado = '', ultimoPanel = 0, proximoPowerup = POWERUP_CADA;
 
 function bucle(ahora) {
   const dt = (ahora - anterior_t) / 1000;
@@ -123,10 +154,7 @@ function bucle(ahora) {
   const entrada = yo ? leerEntrada() : ENTRADA_VACIA;
   mundo.paso(dt, yo ? new Map([[yo.id, entrada]]) : new Map());
 
-  if (yo && ahora - ultimoEnvio > ENVIO_MS) {
-    ultimoEnvio = ahora;
-    enviar({ t: 'estado', x: yo.x, y: yo.y, vx: yo.vx, vy: yo.vy, estado: yo.estado, mira: yo.mira, efecto: yo.efecto, vida: yo.vida, habilidad: yo.habilidad });
-  }
+  if (yo && ahora - ultimoEnvio > ENVIO_MS) enviarEstado(ahora);
   if (anfitrion === miId && mundo.tiempo > proximoPowerup) {
     proximoPowerup = mundo.tiempo + POWERUP_CADA;
     sembrarPowerup();
@@ -135,6 +163,16 @@ function bucle(ahora) {
   dibujar($('#lienzo').getContext('2d'), mundo, ahora / 1000);
   if (ahora - ultimoPanel > 250) { ultimoPanel = ahora; pintarPanel(); }
   requestAnimationFrame(bucle);
+}
+
+function enviarEstado(ahora) {
+  const r = (n) => Math.round(n);
+  const m = { t: 'estado', x: r(yo.x), y: r(yo.y), vx: r(yo.vx), vy: r(yo.vy), estado: yo.estado, mira: yo.mira, efecto: yo.efecto, vida: yo.vida, habilidad: yo.habilidad };
+  const texto = JSON.stringify(m);
+  if (texto === ultimoEnviado && ahora - ultimoEnvio < LATIDO_MS) return;
+  ultimoEnvio = ahora;
+  ultimoEnviado = texto;
+  if (ws?.readyState === 1) ws.send(texto);
 }
 
 function sembrarPowerup() {
@@ -182,11 +220,24 @@ function pintarPanel() {
   $('#rotas-lista').textContent = rotas.join(', ');
   const piezas = Object.values(mundo.piezas).reduce((n, t) => n + Object.keys(t).length, 0);
   $('#contadores').textContent = `${mundo.jugadores.size} jugadores · ${Object.keys(mundo.piezas.estados).length} estados · ${piezas} piezas`;
+  pintarRonda();
   $('#estado-red').textContent = ws?.readyState === 1 ? `sala «${SALA}»${anfitrion === miId ? ' · anfitrión' : ''}` : 'conectando…';
   if (version?.commit) {
     $('#merge-mensaje').textContent = version.commit.mensaje;
     $('#merge-detalle').textContent = `${version.commit.hash} · ${version.commit.autor}`;
   }
+}
+
+const reloj = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+function pintarRonda() {
+  if (!ronda) return;
+  const quedan = Math.max(0, (ronda.fin - performance.now()) / 1000);
+  $('#ronda').textContent = `Ronda ${ronda.numero} · ${reloj(quedan)}`;
+  $('#cola').textContent = espera.length ? `En espera: ${espera.map((e) => e.login).join(', ')}` : 'Nadie en espera';
+  const puesto = espera.findIndex((e) => e.id === miId) + 1;
+  $('#aviso-cola').hidden = !puesto;
+  if (puesto) $('#aviso-cola').textContent = `Estás en la cola · puesto ${puesto} · la próxima ronda empieza en ${reloj(quedan)}`;
 }
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -14,7 +14,7 @@ Cada aportación es **una pieza**: un archivo en una carpeta de `public/piezas/`
 6. **Sin errores ni lentitud.** La CI juega 900 fotogramas con 4 bots que usan todas las piezas. Si tu pieza lanza una excepción, o gasta más de 1 ms de media por fotograma, la PR falla. En partida, una pieza que falla se desactiva sola y aparece en el panel como «pieza rota».
 7. **Límites de equilibrio:** `enfriamiento` ≥ 0,3 s · `duracion` de power-up ≤ 15 s · proyectil con `velocidad` ≤ 1200, `radio` ≤ 16 y `vida` ≤ 5 s · `escala` entre 0,5 y 2.
 
-Además de la CI, revisa Claude desde la cuenta de Jorge: que la pieza haga lo que dice el issue, que se entienda y que no toque campos de `j` o `mundo` que no estén en esta spec.
+Además de la CI, revisa Claude desde la cuenta de Jorge: que la pieza haga lo que dice su tarjeta, que se entienda y que no toque campos de `j` o `mundo` que no estén en esta spec.
 
 ## 2. Tipos de pieza
 
@@ -149,17 +149,19 @@ La entrada `entrada` (solo lectura): `izq`, `der`, `arriba`, `abajo`, `saltarMan
 
 ## 6. Red (para entender, no para tocar)
 
-Cada navegador simula **su** jugador y envía posición, estado y efecto 20 veces por segundo. Una sala (Durable Object de Cloudflare) los reparte. Los proyectiles se simulan en todos los navegadores, pero solo la víctima decide si le dieron. Los power-ups los reparte la sala: quien llega primero se lo lleva. Los cambios del mapa pasan por la sala y se deshacen a los 20 s.
+Cada navegador simula **su** jugador y envía posición, estado y efecto solo cuando cambian, como mucho 10 veces por segundo (y un latido cada 2 s). Una sala (Durable Object de Cloudflare) los reparte. Los proyectiles se simulan en todos los navegadores, pero solo la víctima decide si le dieron. Los power-ups los reparte la sala: quien llega primero se lo lleva. Los cambios del mapa pasan por la sala y se deshacen a los 20 s.
+
+Se juega por rondas de 3 minutos con 10 jugadores como máximo: el resto espera en una cola mirando la partida y, al acabar la ronda, los que jugaron pasan al final. Una conexión que envía más de 30 mensajes por segundo queda fuera.
 
 Al hacer merge en `dev`, Cloudflare redespliega. La partida detecta la versión nueva y recarga: los jugadores vuelven a entrar solos y los puntos se conservan en la sala.
 
 ## 7. Flujo de una tarea
 
-1. Coge un issue del tablero y asígnatelo.
+1. Coge una tarjeta del tablero del taller en 42Teams y asígnatela.
 2. `git switch dev && git pull`, luego `git switch -c feature/<nombre-de-la-pieza>`.
 3. Copia la pieza de ejemplo de su carpeta, cámbiale `nombre`, `autor` y el comportamiento.
-4. `npm run dev` y prueba en `http://localhost:8787`.
-5. `npm run validar` antes de subir.
-6. `git push -u origin feature/<nombre>` y abre la PR contra `dev` enlazando el issue (`Closes #N`).
+4. `pnpm dev` y prueba en `http://localhost:8787`.
+5. `pnpm validar` antes de subir.
+6. `git push -u origin feature/<nombre>` y abre la PR contra `dev` con el id de la tarjeta al principio del título: `H-002 · Estado «aturdido»`. Mueve la tarjeta a «En revisión».
 7. La CI comenta el informe de validación. Claude revisa: aprueba o pide cambios. Si los pide, haz commit y push en la misma rama; la PR se actualiza sola.
-8. Con la aprobación y la CI en verde, la PR se mergea sola (squash). En unos segundos tu pieza está en la partida del proyector.
+8. Con la aprobación y la CI en verde, la PR se mergea sola (squash). En unos segundos tu pieza está en la partida del proyector. Mueve la tarjeta a «Hecho».
